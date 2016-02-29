@@ -1,0 +1,12 @@
+debug:ON
+echo:ON
+logfile:PATH\RestoreSettings.log
+display: REFRESH ACCOUNT
+send:ZN "PHM"<CR>
+wait for:PHM>
+send:S ^%tech("Refresh",$h)=""<CR>
+wait for:PHM>
+send:h<CR>
+closelog
+
+

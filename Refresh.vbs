@@ -1,7 +1,8 @@
 ' VB Script Document
 option explicit
 
-dim strCurDIR, whShell, strInstanceQ, strInstancePath
+dim strCurDIR, whShell, strInstanceQ, strInstance, strInstancePath, strDatabasePath, strInterSystemsPath, strRefreshPath, strFileName, strDrive, strNewDrive
+dim strText, strMessage, strReferenceNumber
 
 set ObjShell = CreateObject("Wscript.shell")
 set ObjFSO =   CreateObject("Wscript.FileSystemObject")
@@ -24,7 +25,7 @@ strInstanceQ = InputBox("ACCEPT or TRAIN?")
 ' check paths
  
 Sub IntersystemsPath
-  strInterPath = InputBox("Default intersystems path not found, please specify (i.e C:\Intersystems")        
+  strInterSystemsPath = InputBox("Default intersystems path not found, please specify (i.e C:\Intersystems")        
   MsgBox("You entered" & strInterSystemsPath & " is this correct?")
   	If () ' input equals no then
   		Call IntersystemsPath        
@@ -49,12 +50,12 @@ Sub DatabasesPath
   	If () then
   		Call DatabasesPath
   	Else 
-    	UCase(strDatabasesPath)
+    	UCase(strDatabasePath)
   	End If
 End Sub
 
   If Not objFSO.FolderExists("C:\Intersystems") then
-               call Intersystems Path 
+    call Intersystems Path 
   Else
   	strInterSystemsPath="C:\Intersystems"
   End If
@@ -67,22 +68,22 @@ End Sub
 ' Path checking done, now find databases folder
 
       if objFso.FolderExists("D:\JACDatabases" & strInstance) then
-        strDatabasesPath="D:\JACDatabases" & strInstance
+        strDatabasePath="D:\JACDatabases" & strInstance
         ElseIf objFso.FolderExists("E:\JACDatabases" & strInstance) then
-          strDatabasesPath="E:\JACDatabases" & strInstance
-          call DatabasesPath
+          strDatabasePath="E:\JACDatabases" & strInstance
+          call DatabasePath
             End If
             
 ' Create Refresh directory
 
-strRefreshPath = strDatabasesPath & "\Refresh" & "." & Day() & "." & Month() & "." & Year() 
+strRefreshPath = strDatabasePath & "\Refresh" & "." & Day() & "." & Month() & "." & Year() 
 
 objFso.CreateFolder(strRefreshPath)
 
 ' Correct Paths on script files
   
-strFileName = strCurDir & "\Backup.txt"
-strDrive =  mid(strCurDir,0,2)        ' Get first two characters of current path (c:)
+strFileName = strCurDIR & "\Backup.txt"
+strDrive =  mid(strCurDIR,0,2)        ' Get first two characters of current path (c:)
 strNewDrive = mid(strInstancePath,0,2)  ' As above
   call RenameFile
 

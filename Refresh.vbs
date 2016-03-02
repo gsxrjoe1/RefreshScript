@@ -1,102 +1,103 @@
 ' VB Script Document
 option explicit
 
-dim strCurDIR, whShell, strInstanceQ, strInstance, strInstancePath, strDatabasePath, strInterSystemsPath, strRefreshPath, strFileName, strDrive, strNewDrive
-dim strText, strMessage, strReferenceNumber, strResult
+const ForReading = 1, ForWriting = 2
 
-set ObjShell = CreateObject("Wscript.shell")
-set ObjFSO =   CreateObject("Wscript.FileSystemObject")
+dim strCurDIR, objFSO, objShell, whShell, strInstanceQ, strInstance, strInstancePath, strDatabasePath, strInterSystemsPath, strRefreshPath, strFileName, strDrive, strNewDrive
+dim strText, strMessage, strReferenceNumber, strResult, strMessageB
 
-set strCurDIR=ObjShell.CurrentDirectory
+set objShell = CreateObject("Wscript.Shell")
+set objFSO =   CreateObject("Scripting.FileSystemObject")
+
+strCurDIR = ObjShell.CurrentDirectory
+
+wscript.echo strCurDIR
 
 strReferenceNumber = InputBox("Enter Reference Number (F00xxxx)")' Enter reference number,no checking, can amend it later
 
 strInstanceQ = InputBox("ACCEPT or TRAIN?","Enter Instance")
 
-UCase(strInstance)
+strInstanceQ = UCase(strInstanceQ)
 
   If strInstanceQ = "ACCEPT" Then
-    Set strInstance = "ACCEPT"
+    strInstance = "ACCEPT"
   ElseIf strInstanceQ = "TRAIN" Then
-    Set strInstance = "TRAIN"
+    strInstance = "TRAIN"
   Else
-    MessageBox("Invalid Input")
+    strMessageB = MsgBox("Invalid Input",vbOKOnly+vbCritical,"Error")
     WScript.Quit
   End If  
 
 ' check paths
  
 Sub IntersystemsPath
-  strInterSystemsPath = InputBox("Default intersystems path not found, please specify (i.e C:\Intersystems")        
-  strMessage="You entered" & strInterSystemsPath & " is this correct?"
-  strResult = MsgBox(strMessage,vbYes+vbNo,"Please Confirm")
+  strInterSystemsPath = InputBox("Default intersystems path not found, please specify (i.e C:\Intersystems" & vbCrLf & "i.e C:\intersystems")        
+  strMessage="You entered -" & strInterSystemsPath & " - is this correct?"
+  strResult = MsgBox(strMessage,vbYesNo,"Please Confirm")
     If (strResult = 7) Then' input equals no then
       Call IntersystemsPath        
-    Else 
-      UCase(strInterSystemsPath)
+    Else
     End If
 End Sub
 
 Sub InstancePath
-  strInstancePath = InputBox("Default Instance installation path not found please specify")
-  strMessage="You entered " & strInstancePath & " is this correct?"
-  strResult = MsgBox(strMessage,vbYes+vbNo,"Please Confirm")
+  strInstancePath = InputBox("Default Instance installation path not found please specify" & vbCrLf & "i.e C:\intersystems\InstanceName")
+  strMessage="You entered - " & strInstancePath & " - is this correct?"
+  strResult = MsgBox(strMessage,vbYesNo,"Please Confirm")
     If (strResult = 7) Then
       Call InstancePath
     Else 
-      UCase(strInstancePath)
     End If
 End Sub
 
 Sub DatabasesPath
-  strDatabasePath = InputBox("Default Database path not found, please specifiy")
-  strMessage="You entered "  &strDatabasePath & " is this correct?"
-  strResult = MsgBox(strMessage,vbYes+vbNo,"Please Confirm")
+  strDatabasePath = InputBox("Default Database path not found, please specifiy" & vbCrLf & "i.e D:\JACDatabasesInstance")
+  strMessage="You entered - "  &strDatabasePath & " - is this correct?"
+  strResult = MsgBox(strMessage,vbYesNo,"Please Confirm")
     If (strResult = 7) Then
       Call DatabasesPath
-    Else 
-      UCase(strDatabasePath)
+    Else
     End If
 End Sub
 
-  If Not (objFSO.FolderExists("C:\Intersystems")) Then
+  If Not (objFSO.FolderExists("C:\InterSystems")) Then
     call IntersystemsPath 
   Else
-    strInterSystemsPath="C:\Intersystems"
-    UCase(strInterSystemsPath)
+    strInterSystemsPath="C:\InterSystems"
   End If
 
          
-  If Not (objFSO.FolderExists("C:\Intersystems\" & strInstance )) Then
+  If Not (objFSO.FolderExists("C:\InterSystems\" & strInstance )) Then
     call InstancePath
   Else
-    strInstancePath="C:\Intersystems\" & strInstance
-    UCase(strInstancePath)
+    strInstancePath="C:\InterSystems\" & strInstance
   End If
 
 ' Path checking done, now find databases folder
 
-      If (objFso.FolderExists("D:\JACDatabases" & strInstance)) Then
+      If (objFSO.FolderExists("D:\JACDatabases" & strInstance)) Then
           strDatabasePath="D:\JACDatabases" & strInstance
-          UCase(strDatabasePath)
-      ElseIf (objFso.FolderExists("E:\JACDatabases" & strInstance)) Then
+      ElseIf (objFSO.FolderExists("E:\JACDatabases" & strInstance)) Then
           strDatabasePath="E:\JACDatabases" & strInstance
-          Ucase(strDatabasePath)
       Else
-          call DatabasePath
+          call DatabasesPath
       End If
             
 ' Create Refresh directory
 
-strRefreshPath = strDatabasePath & "\Refresh" & "." & Day() & "." & Month() & "." & Year() 
+strRefreshPath = strDatabasePath & "\Refresh" & " - " & Day(Now) & "." & Month(Now) & "." & Year(Now) 
 
-objFso.CreateFolder(strRefreshPath)
+If (objFSO.FolderExists(strRefreshPath)) Then
+  strRefreshPath = strRefreshPath & "_" & Second(Now)
+End If
+
+objFSO.CreateFolder(strRefreshPath)
 
 ' Correct Paths on script files
   
 strFileName = strCurDIR & "\Backup.txt"
-strDrive =  mid(strCurDIR,0,2)        ' Get first two characters of current path (c:)
-strNewDrive = mid(strInstancePath,0,2)  ' As above
+strDrive =  Left(strCurDIR,2)        ' Get first two characters of current path (c:)
+strNewDrive = Left(strInstancePath,2)  ' As above
   call RenameFile
 
 sub RenameFile
@@ -120,21 +121,21 @@ objShell.Run(strInstancePath & "\bin\css start" & strInstance)
 
 ' Need to test this rename stuff?
 
-objFso.MoveFile strRefreshPath & "\refresh.cbk", "refresh" & strReferenceNumber & ".cbk"
-objFso.MoveFile strRefreshPath & "\Settings.GOGEN", "Settings" & strReferenceNumber & ".GOGEN"
-objFso.MoveFile strRefreshPath & "\APBackup.ro", "APBackup" & strReferenceNumber & ".ro"
-objFso.MoveFile strRefreshPath & "\GLBackup.ro", "GLBackup" & strReferenceNumber & ".ro"
-objFso.MoveFile strRefreshPath & "\PASADTBackup.ro", "PASADTBackup" & strReferenceNumber & ".ro"
-objFso.MoveFile strRefreshPath & "\Backup.log", "Backup" & strReferenceNumber & ".log"
+objFSO.MoveFile strRefreshPath & "\refresh.cbk", "refresh" & strReferenceNumber & ".cbk"
+objFSO.MoveFile strRefreshPath & "\Settings.GOGEN", "Settings" & strReferenceNumber & ".GOGEN"
+objFSO.MoveFile strRefreshPath & "\APBackup.ro", "APBackup" & strReferenceNumber & ".ro"
+objFSO.MoveFile strRefreshPath & "\GLBackup.ro", "GLBackup" & strReferenceNumber & ".ro"
+objFSO.MoveFile strRefreshPath & "\PASADTBackup.ro", "PASADTBackup" & strReferenceNumber & ".ro"
+objFSO.MoveFile strRefreshPath & "\Backup.log", "Backup" & strReferenceNumber & ".log"
 
 strDrive = "C:"
 strNewDrive = "C:"
 
 call RenameFile 'reset paths
 
-strMessage= strInstance & " has been refreshed"
+strMessage = strInstance & " has been refreshed"
 
-MsgBox(strMessage,options....)
+strMessageB = MsgBox(strMessage,vbOK,"Refresh Complete")
 
 wscript.Quit
 
